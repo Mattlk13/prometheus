@@ -86,7 +86,7 @@ the "Alerts" tab of your Prometheus instance. This will show you the exact
 label sets for which each defined alert is currently active.
 
 For pending and firing alerts, Prometheus also stores synthetic time series of
-the form `ALERTS{alertname="<alert name>", alertstate="pending|firing", <additional alert labels>}`.
+the form `ALERTS{alertname="<alert name>", alertstate="<pending or firing>", <additional alert labels>}`.
 The sample value is set to `1` as long as the alert is in the indicated active
 (pending or firing) state, and the series is marked stale when this is no
 longer the case.
@@ -101,5 +101,5 @@ on top of the simple alert definitions. In Prometheus's ecosystem, the
 role. Thus, Prometheus may be configured to periodically send information about
 alert states to an Alertmanager instance, which then takes care of dispatching
 the right notifications.  
-Prometheus can be [configured](configuration.md) to automatically discovered available
+Prometheus can be [configured](configuration.md) to automatically discover available
 Alertmanager instances through its service discovery integrations.

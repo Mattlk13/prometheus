@@ -23,8 +23,9 @@ import (
 
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/stretchr/testify/require"
+
+	"github.com/prometheus/prometheus/pkg/labels"
 )
 
 func TestPromParse(t *testing.T) {
@@ -249,6 +250,26 @@ func TestPromParseErrors(t *testing.T) {
 			input: "empty_label_name{=\"\"} 0",
 			err:   "expected label name, got \"EQUAL\"",
 		},
+		{
+			input: "foo 1_2\n",
+			err:   "unsupported character in float",
+		},
+		{
+			input: "foo 0x1p-3\n",
+			err:   "unsupported character in float",
+		},
+		{
+			input: "foo 0x1P-3\n",
+			err:   "unsupported character in float",
+		},
+		{
+			input: "foo 0 1_2\n",
+			err:   "expected next entry after timestamp, got \"MNAME\"",
+		},
+		{
+			input: `{a="ok"} 1`,
+			err:   `"INVALID" is not a valid start token`,
+		},
 	}
 
 	for i, c := range cases {
@@ -257,7 +278,7 @@ func TestPromParseErrors(t *testing.T) {
 		for err == nil {
 			_, err = p.Next()
 		}
-		require.NotNil(t, err)
+		require.Error(t, err)
 		require.Equal(t, c.err, err.Error(), "test %d", i)
 	}
 }
@@ -327,7 +348,6 @@ func BenchmarkParse(b *testing.B) {
 		"prometheus":  NewPromParser,
 		"openmetrics": NewOpenMetricsParser,
 	} {
-
 		for _, fn := range []string{"promtestdata.txt", "promtestdata.nometa.txt"} {
 			f, err := os.Open(fn)
 			require.NoError(b, err)

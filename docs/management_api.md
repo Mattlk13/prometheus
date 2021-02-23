@@ -5,7 +5,7 @@ sort_rank: 7
 
 # Management API
 
-Prometheus provides a set of management API to ease automation and integrations.
+Prometheus provides a set of management APIs to facilitate automation and integration.
 
 
 ### Health check
@@ -35,7 +35,7 @@ POST /-/reload
 
 This endpoint triggers a reload of the Prometheus configuration and rule files. It's disabled by default and can be enabled via the `--web.enable-lifecycle` flag.
 
-An alternative way trigger a configuration reload is by sending a `SIGHUP` to the Prometheus process.
+Alternatively, a configuration reload can be triggered by sending a `SIGHUP` to the Prometheus process.
 
 
 ### Quit
@@ -47,4 +47,4 @@ POST /-/quit
 
 This endpoint triggers a graceful shutdown of Prometheus. It's disabled by default and can be enabled via the `--web.enable-lifecycle` flag.
 
-An alternative way trigger a graceful shutdown is by sending a `SIGTERM` to the Prometheus process.
+Alternatively, a graceful shutdown can be triggered by sending a `SIGTERM` to the Prometheus process.

@@ -237,7 +237,7 @@ Prometheus.Graph.prototype.checkTimeDrift = function() {
         method: "GET",
         url: PATH_PREFIX + "/api/v1/query?query=time()",
         dataType: "json",
-            success: function(json, textStatus) {
+        success: function(json, textStatus) {
             if (json.status !== "success") {
                 self.showError("Error querying time.");
                 return;
@@ -246,7 +246,7 @@ Prometheus.Graph.prototype.checkTimeDrift = function() {
             var diff = Math.abs(browserTime - serverTime);
 
             if (diff >= 30) {
-              this.showWarning(
+              self.showWarning(
                   "<div class=\"alert alert-warning\"><strong>Warning!</strong> Detected " +
                   diff.toFixed(2) +
                   " seconds time difference between your browser and the server. Prometheus relies on accurate time and time drift might cause unexpected query results.</div>"
@@ -271,7 +271,7 @@ Prometheus.Graph.prototype.populateInsertableMetrics = function() {
           return;
         }
 
-        pageConfig.allMetrics = json.data; // todo: do we need self.allMetrics? Or can it just live on the page
+        pageConfig.allMetrics = json.data || []; // todo: do we need self.allMetrics? Or can it just live on the page
         for (var i = 0; i < pageConfig.allMetrics.length; i++) {
           self.insertMetric[0].options.add(new Option(pageConfig.allMetrics[i], pageConfig.allMetrics[i]));
         }
@@ -513,6 +513,10 @@ Prometheus.Graph.prototype.submitQuery = function() {
           return;
         }
 
+        if ("warnings" in json && json.warnings.length > 0) {
+          self.showWarning(json.warnings.map(escapeHTML).join('<br>'));
+        }
+
         queryHistory.handleHistory(self);
         success(json.data, textStatus);
       },
@@ -734,13 +738,9 @@ Prometheus.Graph.prototype.updateGraph = function() {
         }
       });
     });
-    if (min === max) {
-      self.rickshawGraph.max = max + 1;
-      self.rickshawGraph.min = min - 1;
-    } else {
-      self.rickshawGraph.max = max + (0.1*(Math.abs(max - min)));
-      self.rickshawGraph.min = min - (0.1*(Math.abs(max - min)));
-    }
+    var offset = 0.1 * (min === max ? max : Math.abs(max-min));
+    self.rickshawGraph.max = max + offset;
+    self.rickshawGraph.min = min - offset;
   }
 
   var xAxis = new Rickshaw.Graph.Axis.Time({ graph: self.rickshawGraph });
@@ -937,9 +937,11 @@ Prometheus.Page.prototype.init = function() {
   if (graphOptions.length === 0) {
     graphOptions.push({});
   }
-
+  var pageInstance = this;
   graphOptions.forEach(this.addGraph, this);
-  $("#add_graph").click(this.addGraph.bind(this, {}));
+  $("#add_graph").click(function() {
+    pageInstance.addGraph({});
+  });
 };
 
 Prometheus.Page.prototype.parseURL = function() {
@@ -1197,7 +1199,7 @@ function init() {
   });
 
   $.ajax({
-    url: PATH_PREFIX + "/static/js/graph/graph_template.handlebar?v=" + BUILD_VERSION,
+    url: PATH_PREFIX + "/classic/static/js/graph/graph_template.handlebar?v=" + BUILD_VERSION,
     success: function(data) {
 
       graphTemplate = data;

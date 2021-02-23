@@ -22,10 +22,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/common/model"
+
 	"github.com/prometheus/prometheus/discovery"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
 )
@@ -76,7 +78,7 @@ func generateTargetGroups(allTargetGroups map[string][]*targetgroup.Group) map[s
 					newTargets = append(newTargets, string(target))
 				}
 			}
-
+			sort.Strings(newTargets)
 			for name, value := range group.Labels {
 				newLabels[string(name)] = string(value)
 			}
@@ -127,6 +129,9 @@ func (a *Adapter) writeOutput() error {
 		return err
 	}
 
+	// Close the file immediately for platforms (eg. Windows) that cannot move
+	// a file while a process is holding a file handle.
+	tmpfile.Close()
 	err = os.Rename(tmpfile.Name(), a.output)
 	if err != nil {
 		return err
